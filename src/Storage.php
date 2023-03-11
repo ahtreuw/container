@@ -3,8 +3,6 @@
 namespace Vulpes\Container;
 
 use JetBrains\PhpStorm\Pure;
-use Psr\Container\ContainerExceptionInterface;
-use Throwable;
 use Vulpes\Container\Parameter\ArgParam;
 use Vulpes\Container\Parameter\EnvParam;
 use Vulpes\Container\Parameter\ObjParam;
@@ -14,48 +12,6 @@ class Storage implements StorageInterface
 {
     private array $args = [];
     private array $conf = [];
-
-    public function __construct(private Parser $parser) {}
-
-    /**
-     * @throws ContainerExceptionInterface
-     */
-    public function readConfig(string $yaml): void
-    {
-        try {
-            ['conf' => $conf, 'args' => $args] = $this->parser->parse($yaml);
-        } catch (Throwable $exception) {
-            throw new ContainerException('Error while parse Yaml config.', ContainerException::PARSEYAML, $exception);
-        }
-
-        $this->pushArgs($args);
-        $this->pushConf($conf);
-    }
-
-    /**
-     * @throws ContainerExceptionInterface
-     */
-    public function readConfigFile(string $filename): void
-    {
-        try {
-            ['conf' => $conf, 'args' => $args] = $this->parser->parseFile($filename);
-        } catch (Throwable $exception) {
-            throw new ContainerException(sprintf('Error while read Yaml config file %s.', $filename), ContainerException::PARSEYAML, $exception);
-        }
-
-        $this->pushArgs($args);
-        $this->pushConf($conf);
-    }
-
-    public function pushArgs(array $args): void
-    {
-        $this->args = array_merge($this->args, $args);
-    }
-
-    public function pushConf(array $conf): void
-    {
-        $this->conf = array_merge($this->conf, $conf);
-    }
 
     /**
      * @throws NotFoundException
@@ -96,6 +52,16 @@ class Storage implements StorageInterface
     public function has(string $id): bool
     {
         return array_key_exists($id, $this->args) || array_key_exists($id, $this->conf);
+    }
+
+    public function pushArgs(array $args): void
+    {
+        $this->args = array_merge($this->args, $args);
+    }
+
+    public function pushConf(array $conf): void
+    {
+        $this->conf = array_merge($this->conf, $conf);
     }
 
     #[Pure] private function createParameters(string $id, array $conf): Parameters

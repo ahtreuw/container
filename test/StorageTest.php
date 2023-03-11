@@ -14,12 +14,12 @@ use Vulpes\Container\Parameter\ValParam;
 
 class StorageTest extends TestCase
 {
-    private Parser $parser;
+    private ParserInterface $parser;
     private StorageInterface $storage;
 
     protected function setUp(): void
     {
-        $this->parser = $this->createMock(Parser::class);
+        $this->parser = $this->createMock(ParserInterface::class);
         $this->storage = new Storage($this->parser);
     }
 
@@ -131,57 +131,5 @@ class StorageTest extends TestCase
             ['object', ObjParam::class, 'val-08', 'val-08'],
             ['--unknown--', ValParam::class, 'val-09', null],
         ];
-    }
-
-    /**
-     * @throws ContainerExceptionInterface
-     */
-    public function testReadConfig(): void
-    {
-        $this->parser->expects($this->once())->method('parse')->with('yaml')->willReturn([
-            'conf' => ['Example' => null],
-            'args' => ['ARG_KEY' => null],
-        ]);
-
-        $this->storage->readConfig('yaml');
-
-        self::assertTrue($this->storage->has('Example'));
-        self::assertTrue($this->storage->has('ARG_KEY'));
-    }
-
-    /**
-     * @throws ContainerExceptionInterface
-     */
-    public function testReadConfigFile(): void
-    {
-        $this->parser->expects($this->once())->method('parseFile')->with('filename.yaml')->willReturn([
-            'conf' => ['Example' => null],
-            'args' => ['ARG_KEY' => null],
-        ]);
-
-        $this->storage->readConfigFile('filename.yaml');
-
-        self::assertTrue($this->storage->has('Example'));
-        self::assertTrue($this->storage->has('ARG_KEY'));
-    }
-
-    public function testReadConfigExceptionHandling(): void
-    {
-        $this->parser->expects($this->once())->method('parse')->willReturnCallback(function () {
-            throw new \Exception;
-        });
-        self::expectException(ContainerExceptionInterface::class);
-        self::expectExceptionCode(ContainerException::PARSEYAML);
-        $this->storage->readConfig('yaml');
-    }
-
-    public function testReadConfigFileExceptionHandling(): void
-    {
-        $this->parser->expects($this->once())->method('parseFile')->willReturnCallback(function () {
-            throw new \Exception;
-        });
-        self::expectException(ContainerExceptionInterface::class);
-        self::expectExceptionCode(ContainerException::PARSEYAML);
-        $this->storage->readConfigFile('filename.yaml');
     }
 }

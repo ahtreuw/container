@@ -118,4 +118,20 @@ class FactoryTest extends TestCase
 
         $this->factory->createParameters('id', get_class($class));
     }
+    
+//    /**
+//     * @throws ContainerExceptionInterface
+//     */
+//    public function testReadConfigFile(): void
+//    {
+//        $this->parser->expects($this->once())->method('parseFile')->with('filename.yaml')->willReturn([
+//            'conf' => ['Example' => null],
+//            'args' => ['ARG_KEY' => null],
+//        ]);
+//
+//        $this->storage->readConfigFile('filename.yaml');
+//
+//        self::assertTrue($this->storage->has('Example'));
+//        self::assertTrue($this->storage->has('ARG_KEY'));
+//    }
 }

@@ -3,15 +3,19 @@
 namespace Vulpes\Container;
 
 use Closure;
+use JetBrains\PhpStorm\Pure;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Psr\SimpleCache\CacheInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionType;
+use Symfony\Component\Yaml\Parser;
 use Vulpes\Container\Parameter\ObjParam;
 use Vulpes\Container\Parameter\ValParam;
+use Vulpes\Container\Parser\SymfonyParser;
 
 class Factory implements FactoryInterface
 {
@@ -90,5 +94,58 @@ class Factory implements FactoryInterface
             return new ValParam(null);
         }
         throw new ContainerException(sprintf('Error while create the parameter %s.', $reflectionParameter->getName()), ContainerException::BUILTIN);
+    }
+
+    public static function createContainer(
+        null|FactoryInterface $factory = null,
+        null|StorageInterface $storage = null,
+        null|CacheInterface   $cache = null,
+        null|ParserInterface  $parser = null,
+        array|string          $filename = null
+    ): Container
+    {
+        $factory = self::createFactory($factory);
+        $storage = self::createStorage($storage);
+        $parser = self::createParser($parser);
+
+        ['conf' => $conf, 'args' => $args] = self::readConfigFiles($parser, $filename);
+
+        $storage->pushArgs($args ?? []);
+        $storage->pushConf($conf ?? []);
+
+        return new Container($factory, $storage, $cache);
+    }
+
+    #[Pure] private static function createFactory(?FactoryInterface $factory): FactoryInterface
+    {
+        if ($factory instanceof FactoryInterface) {
+            return $factory;
+        }
+        return new Factory;
+    }
+
+    #[Pure] private static function createStorage(?StorageInterface $storage): StorageInterface
+    {
+        if ($storage instanceof StorageInterface) {
+            return $storage;
+        }
+        return new Storage;
+    }
+
+    #[Pure] private static function createParser(?ParserInterface $parser): ParserInterface
+    {
+        if ($parser instanceof ParserInterface) {
+            return $parser;
+        }
+        return new SymfonyParser(new Parser);
+    }
+
+    private static function readConfigFiles(ParserInterface $parser, array $files): array
+    {
+        $return = [];
+        foreach ($files as $file) {
+            $return = array_merge($return, $parser->parseFile($file));
+        }
+        return $return;
     }
 }

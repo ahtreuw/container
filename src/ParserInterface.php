@@ -2,9 +2,7 @@
 
 namespace Vulpes\Container;
 
-interface Parser
+interface ParserInterface
 {
-    public function parse(string $value): mixed;
-
     public function parseFile(string $filename): mixed;
 }

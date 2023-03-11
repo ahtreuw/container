@@ -9,4 +9,8 @@ interface StorageInterface
     public function set(string $id, mixed $value);
 
     public function has(string $id): bool;
+
+    public function pushArgs(array $args): void;
+
+    public function pushConf(array $conf): void;
 }

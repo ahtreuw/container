@@ -37,6 +37,7 @@ args:
     !php/const PDO::ATTR_DEFAULT_FETCH_MODE: !php/const PDO::FETCH_OBJ
     !php/const PDO::MYSQL_ATTR_INIT_COMMAND: 'SET NAMES utf8'
 ```
+
 ```php
 use Symfony\Component\Yaml\Parser;
 use Vulpes\Container\Container;
