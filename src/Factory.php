@@ -5,17 +5,18 @@ namespace Container;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use Throwable;
 
-class Reflector implements ReflectorInterface
+class Factory implements FactoryInterface
 {
-    private ReflectorInterface $reflector;
+    private FactoryInterface $factory;
 
-    public function __construct(ReflectorInterface $reflector = null)
+    public function __construct(FactoryInterface $factory = null)
     {
-        $this->reflector = $reflector instanceof ReflectorInterface ? $reflector : $this;
+        $this->factory = $factory instanceof FactoryInterface ? $factory : $this;
     }
 
-    public function create(string $class, mixed ...$parameters): object
+    public function createObject(string $class, mixed ...$parameters): object
     {
         return new $class(...$parameters);
     }
@@ -29,8 +30,8 @@ class Reflector implements ReflectorInterface
     {
         /** @var null|ReflectionMethod $reflectionMethod */
         try {
-            $reflectionMethod = $this->reflector->create(ReflectionMethod::class, $objectOrMethod, $method);
-        } catch (ReflectionException) {
+            $reflectionMethod = $this->factory->createObject(ReflectionMethod::class, $objectOrMethod, $method);
+        } catch (ReflectionException|Throwable) {
             $reflectionMethod = $this->createReflectionClass($objectOrMethod)?->getConstructor();
         }
         return $reflectionMethod;
@@ -41,8 +42,8 @@ class Reflector implements ReflectorInterface
         /** @var null|ReflectionClass $reflectionClass */
         $reflectionClass = null;
         try {
-            $reflectionClass = $this->reflector->create(ReflectionClass::class, $objectOrClass);
-        } catch (ReflectionException) {
+            $reflectionClass = $this->factory->createObject(ReflectionClass::class, $objectOrClass);
+        } catch (ReflectionException|Throwable) {
         }
         return $reflectionClass;
     }

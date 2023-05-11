@@ -4,14 +4,14 @@ namespace Container;
 
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Throwable;
 
 interface ProcessorInterface
 {
-    public function handle(ContainerInterface $container, string $id, mixed $value): bool;
-
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
+     * @throws Throwable
      */
-    public function process(ContainerInterface $container, string $id, mixed $value, mixed ...$arguments): mixed;
+    public function process(ProcessDTO $dto, ProcessHandlerInterface $handler): mixed;
 }

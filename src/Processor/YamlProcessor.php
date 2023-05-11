@@ -1,28 +1,39 @@
 <?php declare(strict_types=1);
 
-namespace Container;
+namespace Container\Processor;
 
+use Container\Factory;
+use Container\FactoryInterface;
+use Container\ProcessHandlerInterface;
+use Container\ProcessorInterface;
+use Container\ProcessDTO;
 use JetBrains\PhpStorm\Pure;
 use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Throwable;
 
 class YamlProcessor implements ProcessorInterface
 {
-    #[Pure] public function __construct(protected ReflectorInterface $reflector = new Reflector)
-    {
-    }
+    #[Pure] public function __construct(
+        protected FactoryInterface $factory = new Factory
+    ) {}
 
-    public function handle(ContainerInterface $container, string $id, mixed $value): bool
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws Throwable
+     */
+    public function process(ProcessDTO $dto, ProcessHandlerInterface $handler): mixed
     {
-        return is_array($value)
-            && array_key_exists('params', $value) && is_array($value['params'])
-            && class_exists($value['class'] ?? $id);
-    }
+        if (!is_array($dto->value) || !array_key_exists('params', $dto->value) ||
+            !is_array($dto->value['params']) || !class_exists($dto->value['class'] ?? $dto->id)) {
+            return $handler->handle($dto);
+        }
 
-    public function process(ContainerInterface $container, string $id, mixed $value, ...$arguments): object
-    {
         $parameters = [];
-        foreach ($value['params'] as $index => $parameter) {
+        $arguments = $dto->arguments;
+        foreach ($dto->value['params'] as $index => $parameter) {
             (is_numeric($index) === false) && $parameter = [$index => $parameter];
 
             [$type, $name] = array_pad(explode(':', key($parameter), 2), 2, count($parameters));
@@ -33,12 +44,12 @@ class YamlProcessor implements ProcessorInterface
                 continue;
             }
 
-            $parameters[$name] = $this->getValueByType($container, $type, current($parameter), $arguments);
+            $parameters[$name] = $this->getValueByType($dto->container, $type, current($parameter), $arguments);
         }
 
-        $object = $this->reflector->create($value['class'] ?? $id, ...$parameters);
+        $object = $this->factory->createObject($dto->value['class'] ?? $dto->id, ...$parameters);
 
-        $container->set($id, $object);
+        $dto->container->set($dto->id, $object);
 
         return $object;
     }
@@ -46,11 +57,12 @@ class YamlProcessor implements ProcessorInterface
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
+     * @throws Throwable
      */
     private function getValueByType(ContainerInterface $container, string $type, mixed $value, array &$args): mixed
     {
         if ($type === 'env') {
-            return $this->reflector->call('getenv', $value);
+            return $this->factory->call('getenv', $value);
         }
         if ($type === 'val') {
             return $value;

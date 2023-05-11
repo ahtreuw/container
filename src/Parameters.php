@@ -26,7 +26,7 @@ class Parameters implements ParametersInterface
                 continue;
             }
 
-            [$type, $isBuiltIn, $optional, $defaultValue, $selfBuild] = $this->parameters[$name];
+            [$type, $isBuiltIn] = $this->parameters[$name];
 
             $return[$name] = $isBuiltIn ? $this->prepareBuiltInValue($type, $value) : $value;
 

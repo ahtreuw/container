@@ -2,6 +2,7 @@
 
 namespace Container;
 
+use JetBrains\PhpStorm\Pure;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Throwable;
@@ -11,34 +12,32 @@ class Container implements ContainerInterface
     /** @var ProcessorInterface[] */
     private array $processors = [];
 
-    public function __construct(
-        protected array               $storage = [],
-        protected ReflectorInterface  $reflector = new Reflector,
-        protected ParametersInterface $parameters = new Parameters,
-        protected ProcessorInterface  $processor = new Processor
-    )
-    {
-        $this->pushProcessor($this->processor);
-    }
+    #[Pure] public function __construct(
+        protected array                   $storage = [],
+        protected FactoryInterface        $factory = new Factory,
+        protected ParametersInterface     $parameters = new Parameters,
+        protected ProcessHandlerInterface $handler = new ProcessHandler
+    ) {}
 
     public function get(string $id, mixed ...$arguments): mixed
     {
         try {
             if (array_key_exists($id, $this->storage)) {
-                return $this->process($id, $this->storage[$id], ...$arguments);
+                return $this->handle($id, $this->storage[$id], $arguments);
             }
 
             if (str_ends_with($id, 'Interface')) {
                 return $this->get(substr($id, 0, -9), ...$arguments);
             }
 
-            return $this->process($id, $this->getParameters($id), ...$arguments);
+            return $this->handle($id, $id, $arguments);
 
         } catch (Throwable $exception) {
             if ($exception instanceof ContainerException && $exception->getId() === $id) {
                 throw $exception;
             }
-            throw new ContainerException($id, sprintf('Error while retrieving the entry %s.', $id), 0, $exception);
+            $message = 'Error while retrieving the entry %s.';
+            throw new ContainerException($id, sprintf($message, $id), 0, $exception);
         }
     }
 
@@ -62,7 +61,7 @@ class Container implements ContainerInterface
         $this->storage[$id] = $entity;
     }
 
-    public function pushProcessor(ProcessorInterface $processor): void
+    public function add(ProcessorInterface $processor): void
     {
         $this->processors[] = $processor;
     }
@@ -71,44 +70,29 @@ class Container implements ContainerInterface
     {
         $id = get_class($object) . '::' . $methodName;
 
-        if (method_exists($object, $methodName) === false) {
+        if (is_callable([$object, $methodName]) === false) {
             throw new NotFoundException($id);
         }
 
-        $parameters = $this->getParameters($id);
-        $parameters = $parameters->make($this, ...$arguments);
-
-        return $this->reflector->call([$object, $methodName], ...$parameters);
+        return $this->factory->call([$object, $methodName], ...$this->getParameters($id)->make($this, ...$arguments));
     }
 
     public function getParameters(string $id): ParametersInterface
     {
-        if (array_key_exists($id, $this->storage) &&
-            $this->storage[$id] instanceof ParametersInterface) {
+        if (array_key_exists($id, $this->storage) && $this->storage[$id] instanceof ParametersInterface) {
             return $this->storage[$id];
         }
-
-        $parameters = $this->parameters->with($id, $this->reflector->createReflectionMethod($id));
-
-        if (array_key_exists($id, $this->storage) === false) {
-            $this->storage[$id] = $parameters;
-        }
-
-        return $parameters;
+        return $this->parameters->with($id, $this->factory->createReflectionMethod($id));
     }
 
     /**
-     * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      * @throws Throwable
      */
-    public function process(string $id, mixed $value, mixed  ...$arguments): mixed
+    private function handle(string $id, mixed $value, array $arguments): mixed
     {
-        foreach ($this->processors as $processor) {
-            if ($processor->handle($this, $id, $value)) {
-                return $processor->process($this, $id, $value, ...$arguments);
-            }
-        }
-        return $value;
+        return $this->handler->with(...$this->processors)
+            ->handle($this->factory->createObject(ProcessDTO::class, $this, $id, $value, $arguments));
     }
 }

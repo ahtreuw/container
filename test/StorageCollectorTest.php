@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-
 namespace Container;
 
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
+use Throwable;
 
 class StorageCollectorTest extends TestCase
 {
@@ -16,19 +16,22 @@ class StorageCollectorTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->reflector = $this->createMock(ReflectorInterface::class);
+        $this->factory = $this->createMock(FactoryInterface::class);
         $this->parameters = $this->createMock(ParametersInterface::class);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testCollectAndPattern(): void
     {
         $data = ['key' => 'value'];
-        $collector = new StorageCollector(storage: $data, reflector: $this->reflector);
+        $collector = new StorageCollector(storage: $data, factory: $this->factory);
 
-        $this->reflector->expects($this->exactly(1))->method('createReflectionClass')
+        $this->factory->expects($this->exactly(1))->method('createReflectionClass')
             ->with('Tests\\TestFactory');
 
-        $this->reflector->expects($this->exactly(2))->method('call')
+        $this->factory->expects($this->exactly(2))->method('call')
             ->willReturnCallback(function ($fn, string $path) {
                 if ($path === '/var/www/tests/*') {
                     return [

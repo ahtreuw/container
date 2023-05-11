@@ -5,6 +5,7 @@ namespace Container;
 use JetBrains\PhpStorm\Pure;
 use ReflectionClass;
 use ReflectionMethod;
+use Throwable;
 
 class StorageCollector
 {
@@ -16,11 +17,14 @@ class StorageCollector
     #[Pure] public function __construct(
         protected array               $storage = [],
         protected ParametersInterface $parameters = new Parameters,
-        protected ReflectorInterface  $reflector = new Reflector
+        protected FactoryInterface    $factory = new Factory
     )
     {
     }
 
+    /**
+     * @throws Throwable
+     */
     public function collect(
         string      $namespace,
         string      $directory,
@@ -36,12 +40,15 @@ class StorageCollector
         return $this->storage;
     }
 
+    /**
+     * @throws Throwable
+     */
     protected function walk(string $namespace, string $dirname, null|string $pattern, int $flags)
     {
         $dirname = rtrim($dirname, "/*") . "/*";
         $namespace = rtrim($namespace, "\\");
 
-        foreach ($this->reflector->call('glob',$dirname) as $path) {
+        foreach ($this->factory->call('glob', $dirname) as $path) {
             $info = pathinfo($path);
 
             if (is_null($info['extension'] ?? null)) {
@@ -59,7 +66,7 @@ class StorageCollector
                 continue;
             }
 
-            $reflectionClass = $this->reflector->createReflectionClass($class);
+            $reflectionClass = $this->factory->createReflectionClass($class);
             $reflectionClass && $this->read($reflectionClass, $flags);
         }
     }

@@ -3,6 +3,8 @@
 
 namespace Container;
 
+use Closure;
+use Container\Processor\ClosureProcessor;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
@@ -43,55 +45,48 @@ class ContainerTest extends TestCase
      */
     public function testGetParameters(): void
     {
-        $parametersWith = $this->createMock(ParametersInterface::class);
-        $parametersAnother = $this->createMock(ParametersInterface::class);
+        $fromWith = $this->createMock(ParametersInterface::class);
+        $fromStorage = $this->createMock(ParametersInterface::class);
+        $fromConstructor = $this->createMock(ParametersInterface::class);
 
-        $parametersConstruct = $this->createMock(ParametersInterface::class);
-        $parametersConstruct->expects($this->once())->method('with')->willReturn($parametersWith);
+        $fromConstructor->expects($this->once())->method('with')->willReturn($fromWith);
 
-        $container = new Container(parameters: $parametersConstruct);
+        $container = new Container(storage: ['from-storage' => $fromStorage], parameters: $fromConstructor);
 
-        self::assertSame($parametersWith, $container->getParameters('id-string'));
-        self::assertSame($parametersWith, $container->getParameters('id-string'));
-
-
-        $container = new Container(
-            storage: ['id-string' => $parametersAnother],
-            parameters: $parametersConstruct
-        );
-
-        self::assertSame($parametersAnother, $container->getParameters('id-string'));
-        self::assertSame($parametersAnother, $container->getParameters('id-string'));
+        self::assertSame($fromWith, $container->getParameters('from-with'));
+        self::assertSame($fromStorage, $container->getParameters('from-storage'));
     }
 
     /**
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      */
-    public function testGet(): void
+    public function testGetAndSet(): void
     {
-        $container = new Container(storage: ['id-string' => 'justAValue']);
-        self::assertSame('justAValue', $container->get('id-string'));
+        $container = new Container(storage: ['id-string' => ['justANotScalarValue']]);
+        self::assertSame(['justANotScalarValue'], $container->get('id-string'));
+
+        $processHandler = $container->get(ProcessHandlerInterface::class);
+        self::assertInstanceOf(ProcessHandlerInterface::class, $processHandler);
 
 
-        $processor = $container->get(ProcessorInterface::class);
-        self::assertInstanceOf(Processor::class, $processor);
-        self::assertInstanceOf(ProcessorInterface::class, $processor);
+        $container->set('id-string', ClosureProcessor::class);
+        $closureProcessor = $container->get('id-string');
+        self::assertInstanceOf(ClosureProcessor::class, $closureProcessor);
+        self::assertInstanceOf(ProcessorInterface::class, $closureProcessor);
 
 
-        $container = new Container(storage: ['id-string' => Processor::class]);
-        $processor = $container->get('id-string');
-        self::assertInstanceOf(Processor::class, $processor);
+        $container->set('id-string', $processHandler);
+        self::assertSame($processHandler, $container->get('id-string'));
 
 
-        $container = new Container(storage: ['id-string' => $processor]);
-        self::assertSame($processor, $container->get('id-string'));
+        $container->set('id-string', function () use ($processHandler) {
+            return $processHandler;
+        });
+        self::assertInstanceOf(Closure::class, $container->get('id-string'));
 
-
-        $container = new Container(storage: ['id-string' => function () use ($processor) {
-            return $processor;
-        }]);
-        self::assertSame($processor, $container->get('id-string'));
+        $container->add(new ClosureProcessor);
+        self::assertSame($processHandler, $container->get('id-string'));
     }
 
     /**
@@ -115,6 +110,7 @@ class ContainerTest extends TestCase
         $container = new Container(storage: ['exceptionThrowerEntity' => function () {
             throw new Exception;
         }]);
+        $container->add(new ClosureProcessor);
 
         self::expectException(ContainerExceptionInterface::class);
         self::expectExceptionMessage(sprintf('Error while retrieving the entry %s.', 'exceptionThrowerEntity'));
@@ -125,14 +121,14 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      * @throws Throwable
+     * @throws NotFoundExceptionInterface
      */
-    public function testCall(): void
+    public function testCallables(): void
     {
-        $container = new Container(storage: ['id-string' => 'id-string-value']);
-
-        self::assertSame('id-string-value', $container->call($container, 'get', 'id-string'));
+        $container = new Container(storage: ['id-string' => ['not-scalar-value']]);
+        self::assertSame(['not-scalar-value'], $container->call($container, 'get', 'id-string'));
+        self::assertEquals([], $container->get(StorageCollector::class . '::getStorage'));
     }
 
     /**

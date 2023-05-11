@@ -4,11 +4,18 @@ namespace Container;
 
 use ReflectionClass;
 use ReflectionMethod;
+use Throwable;
 
-interface ReflectorInterface
+interface FactoryInterface
 {
-    public function create(string $class, mixed ...$parameters): object;
+    /**
+     * @throws Throwable
+     */
+    public function createObject(string $class, mixed ...$parameters): object;
 
+    /**
+     * @throws Throwable
+     */
     public function call(callable $callable, mixed ...$parameters): mixed;
 
     public function createReflectionClass(object|string $objectOrClass): null|ReflectionClass;

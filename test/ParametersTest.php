@@ -17,7 +17,7 @@ class ParametersTest extends TestCase
     protected function setUp(): void
     {
         $this->container = $this->createMock(ContainerInterface::class);
-        $this->reflector = $this->createMock(ReflectorInterface::class);
+        $this->factory = $this->createMock(FactoryInterface::class);
     }
 
     /**
@@ -30,8 +30,8 @@ class ParametersTest extends TestCase
         $data = ['str' => 'str-val', 'number' => '14', 'decimal' => '15.67', 'boolean' => '0', 'mixed' => 'random value'];
         $expected = ['str' => 'str-val', 'number' => 14, 'decimal' => 15.67, 'boolean' => false, 'mixed' => 'random value'];
 
-        $class = new ReflectionClass(new class ($this->reflector) {
-            public function __construct(ReflectorInterface|ParametersInterface $obj)
+        $class = new ReflectionClass(new class ($this->factory) {
+            public function __construct(FactoryInterface|ParametersInterface $obj)
             {
             }
 
@@ -40,7 +40,7 @@ class ParametersTest extends TestCase
             }
         });
 
-        $parameters = (new Parameters)->with('Anonym::get', $class->getMethod('get'));
+        $parameters = (new Parameters)->with('Anonymous::get', $class->getMethod('get'));
         self::assertFalse($parameters->isConstructor());
 
         $result = $parameters->make($this->container, ...$data);
@@ -50,18 +50,18 @@ class ParametersTest extends TestCase
         self::assertSame($expected, $result);
 
 
-        $parameters = (new Parameters)->with('Anonym', $class->getMethod('__construct'));
+        $parameters = (new Parameters)->with('Anonymous', $class->getMethod('__construct'));
         self::assertTrue($parameters->isConstructor());
 
-        $result = $parameters->make($this->container, ...['obj' => $this->reflector]);
-        self::assertInstanceOf(ReflectorInterface::class, $result['obj']);
+        $result = $parameters->make($this->container, ...['obj' => $this->factory]);
+        self::assertInstanceOf(FactoryInterface::class, $result['obj']);
     }
 
     public function testWithNoConstructor(): void
     {
-        $parameters = (new Parameters)->with('Anonym', null);
+        $parameters = (new Parameters)->with('Anonymous', null);
         self::assertTrue($parameters->isConstructor());
-        $parameters = (new Parameters)->with('Anonym::__construct', null);
+        $parameters = (new Parameters)->with('Anonymous::__construct', null);
         self::assertTrue($parameters->isConstructor());
     }
 
@@ -73,11 +73,11 @@ class ParametersTest extends TestCase
     public function testWithSelfBuild(): void
     {
         $class = new ReflectionClass(new class {
-            public function get(ReflectorInterface $reflector = new Reflector)
+            public function get(FactoryInterface $factory = new Factory)
             {
             }
         });
-        $parameters = (new Parameters)->with('Anonym', $class->getMethod('get'));
+        $parameters = (new Parameters)->with('Anonymous', $class->getMethod('get'));
         $result = $parameters->make($this->container);
         self::assertSame([], $result);
     }
@@ -95,7 +95,7 @@ class ParametersTest extends TestCase
             }
         });
 
-        $parameters = (new Parameters)->with('Anonym', $class->getMethod('get'));
+        $parameters = (new Parameters)->with('Anonymous', $class->getMethod('get'));
 
         $result = $parameters->make($this->container, 'hi');
         self::assertSame(['value' => 'hi'], $result);
@@ -112,18 +112,18 @@ class ParametersTest extends TestCase
     public function testWithContainer(): void
     {
         $class = new ReflectionClass(new class {
-            public function get(ReflectorInterface $reflector)
+            public function get(FactoryInterface $factory)
             {
             }
         });
 
-        $parameters = (new Parameters)->with('Anonym', $class->getMethod('get'));
+        $parameters = (new Parameters)->with('Anonymous', $class->getMethod('get'));
 
         $this->container->expects($this->once())->method('has')->willReturn(true);
-        $this->container->expects($this->once())->method('get')->willReturn($this->reflector);
+        $this->container->expects($this->once())->method('get')->willReturn($this->factory);
 
         $result = $parameters->make($this->container);
-        self::assertSame(['reflector' => $this->reflector], $result);
+        self::assertSame(['factory' => $this->factory], $result);
     }
 
     /**
@@ -134,16 +134,16 @@ class ParametersTest extends TestCase
     public function testWithObjects(): void
     {
         $class = new ReflectionClass(new class {
-            public function method(ReflectorInterface $reflector)
+            public function method(FactoryInterface $factory)
             {
             }
         });
 
         $this->container->expects($this->any())->method('has')->willReturn(false);
 
-        $parameters = (new Parameters)->with('Anonym', $class->getMethod('method'));
+        $parameters = (new Parameters)->with('Anonymous', $class->getMethod('method'));
         $result = $parameters->make($this->container);
-        self::assertSame(['reflector' => null], $result);
+        self::assertSame(['factory' => null], $result);
     }
 
     /**
@@ -154,13 +154,13 @@ class ParametersTest extends TestCase
     public function testWithOptionalObjects(): void
     {
         $class = new ReflectionClass(new class {
-            public function optional(ReflectorInterface $reflector = null)
+            public function optional(FactoryInterface $factory = null)
             {
             }
         });
         $this->container->expects($this->any())->method('has')->willReturn(false);
 
-        $parameters = (new Parameters)->with('Anonym', $class->getMethod('optional'));
+        $parameters = (new Parameters)->with('Anonymous', $class->getMethod('optional'));
         $result = $parameters->make($this->container);
         self::assertSame([], $result);
     }
