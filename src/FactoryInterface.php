@@ -2,8 +2,12 @@
 
 namespace Container;
 
-use ReflectionClass;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Throwable;
 
 interface FactoryInterface
@@ -11,14 +15,38 @@ interface FactoryInterface
     /**
      * @throws Throwable
      */
-    public function createObject(string $class, mixed ...$parameters): object;
+    public function createObject(string $className, mixed ...$parameters): object;
 
     /**
-     * @throws Throwable
+     * @throws NotFoundExceptionInterface
      */
-    public function call(callable $callable, mixed ...$parameters): mixed;
+    public function createReflectionMethod(object|string $class, string $method = null): ?ReflectionMethod;
 
-    public function createReflectionClass(object|string $objectOrClass): null|ReflectionClass;
+    public function getParameterReflectionNamedType(
+        ReflectionParameter $parameter,
+        ContainerInterface  $container = null
+    ): ?ReflectionNamedType;
 
-    public function createReflectionMethod(object|string $objectOrMethod, string|null $method = null): null|ReflectionMethod;
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    public function createOptionalParameterValue(
+        ReflectionParameter      $parameter,
+        null|ContainerInterface       $container,
+        null|ReflectionNamedType $type
+    ): mixed;
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    public function createRequiredParameterValue(
+        ReflectionParameter      $parameter,
+        null|ContainerInterface       $container,
+        null|ReflectionNamedType $type,
+        ReflectionMethod         $method,
+        string                   $className
+    ): mixed;
 }

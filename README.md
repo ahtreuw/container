@@ -1,171 +1,78 @@
-# A dependency injection (DI) container
+# PHP FIG PSR-11 Container implementation.
 
-This repository contains the [PHP FIG PSR-11] Container implementation.
 
-## Install
 
-Via Composer Package is available on [Packagist], You can install it using [Composer].
-
-``` bash
-$ composer require vulpes/container
-```
-
-## Default usage
 
 ```php
-// namespace MyNamespace
+interface ControllerExampleInterface{}
+interface FirstInterface{}
+interface SecondInterface{}
+interface MyClassInterface{}
+
+class MyClass implements MyClassInterface, FirstInterface, SecondInterface
 {
-    interface ExampleDataAccessObjectInterface {}
-    
-    class ExampleDataAccessObject implements ExampleDataAccessObjectInterface {
-        public function __construct(PDO $master, PDO $replica, string $key) {}
-    }
-    
-    class AnotherExampleDataAccessObject implements ExampleDataAccessObjectInterface {}
-
-    interface ExampleModelInterface {}
-
-    class ExampleModel implements ExampleModelInterface { 
-        public function __construct(ExampleDataAccessObjectInterface $dao) {}
-    }
-    
-    interface StorageCollectorWillKnowInterface {}
-    interface StorageCollectorWillKnowRequestInterface {}
-    
-    class Request implements StorageCollectorWillKnowInterface, StorageCollectorWillKnowRequestInterface {
-        public function __construct(ArrayObject $arrayObject = new ArrayObject) {}
-    }
-
-    class ExampleController {
-        public function __construct(ExampleModelInterface $model, StorageCollectorWillKnowInterface $request) {
-            // the (Request) $request object will be the same that under below
-        }
-        
-        public function handle(StorageCollectorWillKnowRequestInterface $request, int $id, string $userName) {
-            // the (Request) $request object will be the same as above
-        }
+    public function __construct(string $name, array $options)
+    {
+        print sprintf("%s;%s\r\n", $name, http_build_query($options));
     }
 }
 
-// bootstrap
+class ControllerExample implements ControllerExampleInterface
 {
-    // If cached storage data available
-    {
-        // not necessary, but can speed things up a lot for larger projects
-        $storageData = [/** the cached storage data */];
-    }
-
-    // If cached storage data NOT available
-    {
-        $storageData = [/** the parsed data from Yaml */];
-        
-        $collector = new Container\StorageCollector($storageData);
-        
-        // You can collect interfaces and constructor/method
-        // parameters for faster processes or easier configuration
-        // it will not overwrite existing settings (like from Yaml)
-        $collector->collect('MyNamespace', __DIR__ . '/src/my-directory');
-        
-        // returns the existing and new settings together
-        $storageData = $collector->getStorage();
-        
-        // save storage data to cache..
-    }
-    
-    // create container instance with predefined storage values
-    $container = new Container\Container($storageData);
-    
-    // to process the parsed data from Yaml
-    $container->add(new Container\Processor\YamlProcessor);
-     
-    // create instance of ExampleController
-    $exampleController = $container->get(ExampleController::class);
-    
-    // set AnotherExampleDataAccessObject to use when ExampleDataAccessObjectInterface build
-    $container->set(ExampleDataAccessObjectInterface::class, AnotherExampleDataAccessObject::class);
-     
-    // create instance of ExampleController with AnotherExampleDataAccessObject
-    $exampleController = $container->get(ExampleController::class);
-    
-    // to process \Closure objects
-    $container->add(new Container\Processor\ClosureProcessor);
-    
-    // set Closure to use when ExampleDataAccessObjectInterface build
-    $container->set(ExampleDataAccessObjectInterface::class, 
-        function(Container\ContainerInterface $container, string $id, mixed ...$args){
-            return new class implements ExampleDataAccessObjectInterface {};
-        });
-     
-    // create instance of ExampleController with a custom ExampleDataAccessObjectInterface
-    $exampleController = $container->get(ExampleController::class);
-     
-    // create instance of ExampleController and call handle function with Request, with custom builtin parameters
-    $handleResult = $container->get(ExampleController::class . '::handle', '17', 'user-name');
-     
-    // call ExampleController handle method with Request, with custom builtin parameters
-    $handleResult = $container->call($exampleController, 'handle', '17', 'user-name');
+    public function __construct(
+        public MyClass          $obj0,
+        public MyClassInterface $obj1,
+        public FirstInterface   $obj2,
+        public SecondInterface  $obj3,
+        public MyClassInterface $obj4,
+        public                  $obj5
+    ){}
 }
+
+$container = new Container\Container(storage: [
+
+    // You can set predefined constructor parameters or even a ready instance.
+    MyClass::class => new MyClass('MyClass', ['port' => 3306]),
+
+    // With the ::__construct suffix, the parameters will be available to other interfaces even after running MyClass
+    MyClass::class . '::__construct' => ['name' => 'MyClass::__construct', 'options' => ['port' => 3307]],
+
+    // An alias can also be set based on the interface, or based on your own keying.
+    FirstInterface::class => MyClass::class,
+    SecondInterface::class => function (Psr\Container\ContainerInterface $container) {
+        return $container->get('my-own-id-2');
+    },
+    'my-own-id-1' => MyClass::class,
+    'my-own-id-2' => MyClass::class,
+
+    // If interface name match with classname (classname + "Interface"), you don't need to define
+    // the method name (__construct) -> in the first build it will be overwritten with the instance
+    MyClassInterface::class => ['name' => 'MyClassInterface', 'options' => function () {
+        return ['port' => 3308];
+    }],
+
+    // If interface name not match with classname (classname + "Interface"),
+    // you must define the method name (__construct)
+    FirstInterface::class . '::__construct' => ['name' => 'FirstInterface', 'options' => ['port' => 3309]],
+    'my-own-id-1::__construct' => ['name' => 'my-own-id-1', 'options' => ['port' => 3311]],
+    'my-own-id-2::__construct' => ['name' => 'my-own-id-2'],
+    ControllerExample::class . '::__construct' => ['obj5' => 'my-own-id-1'],
+]);
+
+$example = $container->get(ControllerExampleInterface::class);
+
+//    MyClass;port=3306
+//    MyClassInterface;port=3308
+//    FirstInterface;port=3309
+//    my-own-id-2;port=3307
+//    my-own-id-1;port=3311
+
+print_r($example);
+//    ControllerExample Object
+//        [obj0] => MyClass Object <MyClass>           MyClass;           port=3306
+//        [obj1] => MyClass Object <MyClassInterface>  MyClassInterface;  port=3308
+//        [obj2] => MyClass Object <FirstInterface>    FirstInterface;    port=3309
+//        [obj3] => MyClass Object <my-own-id-2>       my-own-id-2;       port=3307
+//        [obj4] => MyClass Object <MyClassInterface>  MyClassInterface;  port=3308
+//        [obj5] => MyClass Object <my-own-id-1>       my-own-id-1;       port=3311
 ```
-
-#### The Yaml config for the example above
-
-```yaml
-ExampleDataAccessObject:
-  params:
-    - obj: PDO:master
-    - obj: PDO:replica
-    - val: example-key
-
-PDO:master:
-  class: PDO
-  params:
-    - env: MYSQL01_DSN
-    - env: MYSQL01_USER
-    - env: MYSQL01_PASS
-    - arg: PDO:options
-
-PDO:replica:
-  class: PDO
-  params:
-    - env: MYSQL02_DSN
-    - env: MYSQL02_USER
-    - env: MYSQL02_PASS
-    - arg: PDO:options
-
-PDO:options:
-  !php/const PDO::ATTR_ERRMODE: !php/const PDO::ERRMODE_EXCEPTION
-  !php/const PDO::ATTR_DEFAULT_FETCH_MODE: !php/const PDO::FETCH_OBJ
-  !php/const PDO::MYSQL_ATTR_INIT_COMMAND: 'SET NAMES utf8'
-```
-
-## Customizable usage
-
-```php
-$container = new Container\Container(
-
-    // storage: You can define in advance what values You want to use with which key/interface
-    storage: [], // storage
-    
-    // factory: You can define how to instantiate classes or call functions or get the required Reflector classes
-    factory: new Container\Factory, // Container\FactoryInterface
-
-    // parameters: You can customize how to build the necessary parameter values for different methods/constructors
-    parameters: new Container\Parameters, // Container\ParametersInterface
-
-    // handler: You can customize how to build the necessary parameter values for different methods/constructors
-    handler: new Container\ProcessHandler // Container\ProcessHandlerInterface
-);
-
-// With the help of YamlProcessor, You can pre-define the values of
-// various parameters and separate classes according to the way of use.
-$container->add(processor: new Container\Processor\YamlProcessor);
-
-// With the help of ClosureProcessor, You can use \Closure objects to build your own objects
-$container->add(processor: new Container\Processor\ClosureProcessor);
-
-// Or you can create your own processor if needed
-$container->add(processor: new MyOwnProcessor); // implements Container\ProcessorInterface
-```
-[PHP FIG PSR-20]: https://www.php-fig.org/psr/psr-11/
-[Packagist]: http://packagist.org/packages/vulpes/container
-[Composer]: http://getcomposer.org
