@@ -244,7 +244,10 @@ class ContainerTest extends TestCase
     public function testOptionalParameters(): void
     {
         $object = new class {
-            const TEST = true;
+            const TEST_BOOL = true;
+            const TEST_STRING = 'my-str';
+            const TEST_FLOAT = 42.56;
+            const TEST_INT = 13;
 
             public function __construct(
                 public null|ContainerInterface              $container00 = null,
@@ -258,7 +261,10 @@ class ContainerTest extends TestCase
                 public null|(MockObject&ContainerInterface) $container42 = null,
                 public null|string|array                    $container101 = null,
                 public                                      $container102 = [null],
-                public                                      $container103 = self::TEST
+                public ContainerInterface|bool              $container103 = self::TEST_BOOL,
+                public ContainerInterface|string            $container104 = self::TEST_STRING,
+                public ContainerInterface|float             $container105 = self::TEST_FLOAT,
+                public ContainerInterface|int               $container106 = self::TEST_INT,
             )
             {
             }
@@ -290,7 +296,10 @@ class ContainerTest extends TestCase
 
         self::assertNull($parameters['container101']);
         self::assertEquals([null], $parameters['container102']);
-        self::assertEquals($object::TEST, $parameters['container103']);
+        self::assertEquals($object::TEST_BOOL, $parameters['container103']);
+        self::assertEquals($object::TEST_STRING, $parameters['container104']);
+        self::assertEquals($object::TEST_FLOAT, $parameters['container105']);
+        self::assertEquals($object::TEST_INT, $parameters['container106']);
     }
 
     /**
@@ -300,7 +309,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container([ContainerInterface::class => Container::class], new Factory);
 
-        $object = new class (null,null, null, null, $container, $container, $container, null, null, null, null, null) {
+        $object = new class (null, null, null, null, $container, $container, $container, null, null, null, null, null) {
             public function __construct(
                 public null|ContainerInterface              $container00,
                 public null|ContainerInterface              $container01,

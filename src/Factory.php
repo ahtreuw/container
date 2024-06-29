@@ -110,7 +110,12 @@ class Factory implements FactoryInterface
         } catch (ReflectionException) {
             $defaultValue = null;
         }
-        if (is_object($defaultValue)) {
+        if (
+            is_object($defaultValue) ||
+            is_string($defaultValue) ||
+            is_int($defaultValue) ||
+            is_bool($defaultValue) ||
+            is_float($defaultValue)) {
             return $defaultValue;
         }
         if ($type && $container?->has($type->getName())) {
