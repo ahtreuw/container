@@ -1,5 +1,4 @@
 /.idea
-/tests
 /vendor
 .phpunit.cache
 .phpunit.result.cache
