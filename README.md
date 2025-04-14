@@ -2,6 +2,8 @@
 
 This repository contains the [PHP FIG PSR-11] Container implementation.
 
+[![codecov](https://codecov.io/gh/ahtreuw/container/branch/main/graph/badge.svg)](https://codecov.io/gh/ahtreuw/container)
+
 ## Install
 
 Via Composer Package is available on [Packagist], You can install it using [Composer].
