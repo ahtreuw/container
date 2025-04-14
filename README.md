@@ -40,10 +40,6 @@ class ExampleController {
     public function __construct(ExampleModelInterface $model, StorageCollectorWillKnowInterface $request) {
         // the (Request) $request object will be the same that under below
     }
-    
-    public function handle(StorageCollectorWillKnowRequestInterface $request, int $id, string $userName) {
-        // the (Request) $request object will be the same as above
-    }
 }
 ```
 [PHP FIG PSR-20]: https://www.php-fig.org/psr/psr-11/
