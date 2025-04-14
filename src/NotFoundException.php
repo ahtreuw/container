@@ -2,20 +2,19 @@
 
 namespace Container;
 
-use JetBrains\PhpStorm\Pure;
+use Exception;
 use Psr\Container\NotFoundExceptionInterface;
-use Throwable;
 
-class NotFoundException extends ContainerException implements NotFoundExceptionInterface
+class NotFoundException extends Exception implements NotFoundExceptionInterface
 {
-    #[Pure] public function __construct(
-        string    $id,
-        string    $message = "",
-        int       $code = 0,
-        Throwable $previous = null
-    )
+    public const NOT_FOUND_MESSAGE = 'No entry was found for %s identifier.';
+    public const CLASS_NOT_FOUND = 3;
+    public const  INTERFACE_NOT_FOUND = 5;
+    public const  BUILTIN_NOT_FOUND = 8;
+    public const  DEFAULT_NOT_FOUND = 9;
+
+    public function __construct(string $id, int $code)
     {
-        $message = $message ?: sprintf('No entry was found for %s identifier.', $id);
-        parent::__construct($id, $message, $code, $previous);
+        parent::__construct(sprintf(self::NOT_FOUND_MESSAGE, $id), $code);
     }
 }

@@ -1,19 +1,22 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         colors="true"
-         stopOnFailure="true"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd"
-         cacheDirectory=".phpunit.cache">
+         bootstrap="vendor/autoload.php"
+         colors="true">
   <php>
     <env name="ENVIRONMENT" value="testing"/>
     <ini name="error_reporting" value="1"/>
     <ini name="xdebug.mode" value="coverage"/>
     <env name="XDEBUG_MODE" value="coverage"/>
   </php>
-  <coverage/>
+  <coverage>
+    <report>
+      <clover outputFile="coverage.xml"/>
+    </report>
+  </coverage>
   <testsuites>
     <testsuite name="Unit">
-      <directory suffix="Test.php">test</directory>
+      <directory suffix="Test.php">tests</directory>
     </testsuite>
   </testsuites>
   <source>
