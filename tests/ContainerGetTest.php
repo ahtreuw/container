@@ -14,7 +14,7 @@ class ContainerGetTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         eval('
-        namespace Tests\\ContainerGetTest\\TestObjects; 
+        namespace Tests\\Container\\ContainerGetTest\\TestObjects; 
         
         class TestClassWithDefaultParameterValues
         {
@@ -44,7 +44,7 @@ class ContainerGetTest extends TestCase
      */
     public function testGetOptional(): void
     {
-        $id = 'Tests\ContainerGetTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $object = $container->get($id);
@@ -72,7 +72,7 @@ class ContainerGetTest extends TestCase
      */
     public function testGetWithDefaultParameterValues(): void
     {
-        $id = 'Tests\ContainerGetTest\TestObjects\TestClassWithDefaultParameterValues';
+        $id = 'Tests\Container\ContainerGetTest\TestObjects\TestClassWithDefaultParameterValues';
         $container = new Container;
 
         $obj = $container->get($id);

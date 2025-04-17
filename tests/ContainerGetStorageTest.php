@@ -16,7 +16,7 @@ class ContainerGetStorageTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         eval('
-        namespace Tests\\ContainerGetStorageTest\\TestObjects; 
+        namespace Tests\\Container\\ContainerGetStorageTest\\TestObjects; 
         
         class TestClassWithOptionalParameter
         {
@@ -59,7 +59,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParameters(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
 
         $container = new Container;
 
@@ -82,7 +82,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithAliasParam(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
 
         $container = new Container;
 
@@ -103,7 +103,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithIdParam(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set($id . '::container', $container);
@@ -123,7 +123,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithAliasAndObjectNameParam(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set($id . 'Interface::' . ContainerInterface::class, $container);
@@ -143,7 +143,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithIdAndObjectNameParam(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set($id . '::' . ContainerInterface::class, $container);
@@ -163,7 +163,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithParameterAndObjectName(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set(ContainerInterface::class . '::container', $container);
@@ -183,7 +183,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetParameterStorageValue(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set(ArrayAccess::class, $arrayObject = new ArrayObject([]));
@@ -201,7 +201,7 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetParameterAllowsNull(): void
     {
-        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+        $id = 'Tests\Container\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $object = $container->get($id);

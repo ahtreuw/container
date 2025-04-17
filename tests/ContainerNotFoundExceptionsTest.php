@@ -12,7 +12,7 @@ class ContainerNotFoundExceptionsTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         eval('
-        namespace Tests\\ContainerNotFoundExceptionsTest\\TestObjects; 
+        namespace Tests\\Container\\ContainerNotFoundExceptionsTest\\TestObjects; 
         interface SomeServiceInterface {}
         class TestClassWithSomeServiceInterfaceParameter { 
             public function __construct(SomeServiceInterface $service) {} 
@@ -58,7 +58,7 @@ class ContainerNotFoundExceptionsTest extends TestCase
     {
         $container = new Container;
 
-        $className = '\Tests\ContainerNotFoundExceptionsTest\TestObjects\TestClassWithIntParam';
+        $className = '\Tests\Container\ContainerNotFoundExceptionsTest\TestObjects\TestClassWithIntParam';
 
         self::expectException(NotFoundExceptionInterface::class);
         self::expectExceptionMessage("No entry was found for $className::\$value identifier.");
@@ -74,7 +74,7 @@ class ContainerNotFoundExceptionsTest extends TestCase
     {
         $container = new Container;
 
-        $className = '\Tests\ContainerNotFoundExceptionsTest\TestObjects\TestClassWithSomeServiceInterfaceParameter';
+        $className = '\Tests\Container\ContainerNotFoundExceptionsTest\TestObjects\TestClassWithSomeServiceInterfaceParameter';
 
         self::expectException(NotFoundExceptionInterface::class);
         self::expectExceptionMessage("No entry was found for $className::\$service identifier.");

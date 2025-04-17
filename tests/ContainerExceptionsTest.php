@@ -14,7 +14,7 @@ class ContainerExceptionsTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         eval('
-        namespace Tests\\ContainerExceptionsTest\\TestObjects; 
+        namespace Tests\\Container\\ContainerExceptionsTest\\TestObjects; 
         
         interface TestClassInterface {}
         interface TestAliasClassInterface {}
@@ -44,7 +44,7 @@ class ContainerExceptionsTest extends TestCase
     {
         $container = new Container;
 
-        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestAliasClassInterface';
+        $id = 'Tests\Container\ContainerExceptionsTest\TestObjects\TestAliasClassInterface';
 
         self::expectException(ContainerExceptionInterface::class);
         self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, $id));
@@ -58,7 +58,7 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testGetWithRecursiveParameter(): void
     {
-        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithRecursiveParameter';
+        $id = 'Tests\Container\ContainerExceptionsTest\TestObjects\TestClassWithRecursiveParameter';
         $container = new Container;
 
         self::expectException(ContainerExceptionInterface::class);
@@ -137,7 +137,7 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testContainerConstructException(): void
     {
-        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
+        $id = 'Tests\Container\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
         $runtimeException = new RuntimeException('My runtime error message', 13);
         $container = new Container([
             "$id::params" => [
@@ -163,7 +163,7 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testContainerConstructExceptionWithContainerException(): void
     {
-        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
+        $id = 'Tests\Container\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
         $containerException = new ContainerException($keyId = 'another-key', 13);
         $container = new Container([
             "$id::params" => [
@@ -188,7 +188,7 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testContainerConstructExceptionWithNotFoundException(): void
     {
-        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
+        $id = 'Tests\Container\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
         $containerException = new NotFoundException($keyId = 'another-key', 13);
         $container = new Container([
             "$id::params" => [

@@ -16,9 +16,7 @@ use Throwable;
 
 class Container implements ContainerInterface
 {
-    public function __construct(protected array $storage = [])
-    {
-    }
+    public function __construct(protected array $storage = []) {}
 
     public function get(string $id, null|string $alias = null, null|string $source = null): mixed
     {
