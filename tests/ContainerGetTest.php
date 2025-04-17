@@ -8,11 +8,31 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use stdClass;
-use Tests\Container\TestObjects\TestClassWithDefaultParameterValues;
-use Tests\Container\TestObjects\TestClassWithOptionalParameter;
 
 class ContainerGetTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        eval('
+        namespace Tests\\ContainerGetTest\\TestObjects; 
+        
+        class TestClassWithDefaultParameterValues
+        {
+            public function __construct(public $name, public $object = new \stdClass) {}
+        }
+        class TestClassWithOptionalParameter
+        {
+            public null|\Psr\Container\ContainerInterface $container;
+        
+            public function __construct(
+                public null|\ArrayAccess|(\Stringable&\Throwable) $arrayAccess,
+                \Psr\Container\ContainerInterface                 $container = null
+            )
+            {
+                $this->container = $container;
+            }
+        }');
+    }
     public function testImplementation(): void
     {
         self::assertInstanceOf(ContainerInterface::class, new Container);
@@ -24,14 +44,12 @@ class ContainerGetTest extends TestCase
      */
     public function testGetOptional(): void
     {
+        $id = 'Tests\ContainerGetTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class);
+        $object = $container->get($id);
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
         self::assertNull($object->arrayAccess);
         self::assertNull($object->container);
@@ -54,11 +72,11 @@ class ContainerGetTest extends TestCase
      */
     public function testGetWithDefaultParameterValues(): void
     {
+        $id = 'Tests\ContainerGetTest\TestObjects\TestClassWithDefaultParameterValues';
         $container = new Container;
-        /**
-         * @var TestClassWithDefaultParameterValues $obj
-         */
-        $obj = $container->get(TestClassWithDefaultParameterValues::class);
+
+        $obj = $container->get($id);
+
         self::assertNull($obj->name);
         self::assertInstanceOf(stdClass::class, $obj->object);
 

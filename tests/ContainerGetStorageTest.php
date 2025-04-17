@@ -10,10 +10,28 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Tests\Container\TestObjects\TestClassWithOptionalParameter;
 
 class ContainerGetStorageTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        eval('
+        namespace Tests\\ContainerGetStorageTest\\TestObjects; 
+        
+        class TestClassWithOptionalParameter
+        {
+            public null|\Psr\Container\ContainerInterface $container;
+        
+            public function __construct(
+                public null|\ArrayAccess|(\Stringable&\Throwable) $arrayAccess,
+                public null|\ArrayAccess                          $onlyArrayAccess,
+                \Psr\Container\ContainerInterface                 $container = null
+            )
+            {
+                $this->container = $container;
+            }
+        }');
+    }
 
     /**
      * @throws ContainerExceptionInterface
@@ -41,20 +59,19 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParameters(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+
         $container = new Container;
 
-        $container->set(TestClassWithOptionalParameter::class . 'Interface::params', $params = [
+        $container->set($id . 'Interface::params', $params = [
             'container' => $container
         ]);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class . 'Interface');
+        $object = $container->get($id . 'Interface');
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
-        self::assertSame($params, $container->get(TestClassWithOptionalParameter::class . 'Interface::params'));
+        self::assertSame($params, $container->get($id . 'Interface::params'));
         self::assertSame($container, $object->container);
         self::assertNull($object->arrayAccess);
     }
@@ -65,18 +82,17 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithAliasParam(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
+
         $container = new Container;
 
-        $container->set(TestClassWithOptionalParameter::class . 'Interface::container', $container);
+        $container->set($id . 'Interface::container', $container);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class . 'Interface');
+        $object = $container->get($id . 'Interface');
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
-        self::assertSame($container, $container->get(TestClassWithOptionalParameter::class . 'Interface::container'));
+        self::assertSame($container, $container->get($id . 'Interface::container'));
         self::assertSame($container, $object->container);
         self::assertNull($object->arrayAccess);
     }
@@ -87,18 +103,16 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithIdParam(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
-        $container->set(TestClassWithOptionalParameter::class . '::container', $container);
+        $container->set($id . '::container', $container);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class);
+        $object = $container->get($id);
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
-        self::assertSame($container, $container->get(TestClassWithOptionalParameter::class . '::container'));
+        self::assertSame($container, $container->get($id . '::container'));
         self::assertSame($container, $object->container);
         self::assertNull($object->arrayAccess);
     }
@@ -109,18 +123,16 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithAliasAndObjectNameParam(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
-        $container->set(TestClassWithOptionalParameter::class . 'Interface::' . ContainerInterface::class, $container);
+        $container->set($id . 'Interface::' . ContainerInterface::class, $container);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class . 'Interface');
+        $object = $container->get($id . 'Interface');
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
-        self::assertSame($container, $container->get(TestClassWithOptionalParameter::class . 'Interface::' . ContainerInterface::class));
+        self::assertSame($container, $container->get($id . 'Interface::' . ContainerInterface::class));
         self::assertSame($container, $object->container);
         self::assertNull($object->arrayAccess);
     }
@@ -131,18 +143,16 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithIdAndObjectNameParam(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
-        $container->set(TestClassWithOptionalParameter::class . '::' . ContainerInterface::class, $container);
+        $container->set($id . '::' . ContainerInterface::class, $container);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class);
+        $object = $container->get($id);
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
-        self::assertSame($container, $container->get(TestClassWithOptionalParameter::class . '::' . ContainerInterface::class));
+        self::assertSame($container, $container->get($id . '::' . ContainerInterface::class));
         self::assertSame($container, $object->container);
         self::assertNull($object->arrayAccess);
     }
@@ -153,16 +163,14 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetFromStorageParametersWithParameterAndObjectName(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set(ContainerInterface::class . '::container', $container);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class);
+        $object = $container->get($id);
 
-        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+        self::assertInstanceOf($id, $object);
 
         self::assertSame($container, $container->get(ContainerInterface::class . '::container'));
         self::assertSame($container, $object->container);
@@ -175,15 +183,13 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetParameterStorageValue(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
         $container->set(ArrayAccess::class, $arrayObject = new ArrayObject([]));
         $container->set(substr(ContainerInterface::class, 0, -9), $container);
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class);
+        $object = $container->get($id);
 
         self::assertSame($container, $object->container);
         self::assertSame($arrayObject, $object->arrayAccess);
@@ -195,12 +201,10 @@ class ContainerGetStorageTest extends TestCase
      */
     public function testGetParameterAllowsNull(): void
     {
+        $id = 'Tests\ContainerGetStorageTest\TestObjects\TestClassWithOptionalParameter';
         $container = new Container;
 
-        /**
-         * @var TestClassWithOptionalParameter $object
-         */
-        $object = $container->get(TestClassWithOptionalParameter::class);
+        $object = $container->get($id);
 
         self::assertNull($object->container);
         self::assertNull($object->arrayAccess);

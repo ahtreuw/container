@@ -8,12 +8,35 @@ use Container\NotFoundException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use RuntimeException;
-use Tests\Container\TestObjects\TestAliasClassInterface;
-use Tests\Container\TestObjects\TestClassWithExceptionOnConstruct;
-use Tests\Container\TestObjects\TestClassWithRecursiveParameter;
 
 class ContainerExceptionsTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        eval('
+        namespace Tests\\ContainerExceptionsTest\\TestObjects; 
+        
+        interface TestClassInterface {}
+        interface TestAliasClassInterface {}
+        
+        class TestClass implements TestClassInterface
+        {
+            public function __construct(TestAliasClassInterface $alias) {}
+        }
+        class TestAliasClass implements TestAliasClassInterface
+        {
+            public function __construct(TestClassInterface $alias) {}
+        }
+        class TestClassWithExceptionOnConstruct
+        {
+            public function __construct(\\Throwable $exception) { throw $exception; }
+        }
+        class TestClassWithRecursiveParameter
+        {
+            public function __construct(TestClassWithRecursiveParameter $value) {}
+        }');
+    }
+
     /**
      * @throws ContainerExceptionInterface
      */
@@ -21,11 +44,13 @@ class ContainerExceptionsTest extends TestCase
     {
         $container = new Container;
 
+        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestAliasClassInterface';
+
         self::expectException(ContainerExceptionInterface::class);
-        self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, TestAliasClassInterface::class));
+        self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, $id));
         self::expectExceptionMessage(ContainerException::CIRCULAR_DEPENDENCY_MESSAGE);
 
-        $container->get(TestAliasClassInterface::class);
+        $container->get($id);
     }
 
     /**
@@ -33,13 +58,14 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testGetWithRecursiveParameter(): void
     {
+        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithRecursiveParameter';
         $container = new Container;
 
         self::expectException(ContainerExceptionInterface::class);
-        self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, TestClassWithRecursiveParameter::class));
+        self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, $id));
         self::expectExceptionMessage(ContainerException::PARAMETER_DEPENDENCY_MESSAGE);
 
-        $container->get(TestClassWithRecursiveParameter::class);
+        $container->get($id);
     }
 
     /**
@@ -111,12 +137,13 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testContainerConstructException(): void
     {
+        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
         $runtimeException = new RuntimeException('My runtime error message', 13);
         $container = new Container([
-            TestClassWithExceptionOnConstruct::class . '::params' => [
+            "$id::params" => [
                 'exception' => $runtimeException
             ],
-            'key' => TestClassWithExceptionOnConstruct::class,
+            'key' => $id,
         ]);
 
         self::expectException(ContainerExceptionInterface::class);
@@ -136,16 +163,17 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testContainerConstructExceptionWithContainerException(): void
     {
-        $containerException = new ContainerException($id = 'another-key', 13);
+        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
+        $containerException = new ContainerException($keyId = 'another-key', 13);
         $container = new Container([
-            TestClassWithExceptionOnConstruct::class . '::params' => [
+            "$id::params" => [
                 'exception' => $containerException
             ],
-            'key' => TestClassWithExceptionOnConstruct::class,
+            'key' => $id,
         ]);
 
         self::expectException(ContainerExceptionInterface::class);
-        self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, $id));
+        self::expectExceptionMessage(sprintf(ContainerException::CONTAINER_ERROR, $keyId));
 
         try {
             $container->get('key');
@@ -160,16 +188,17 @@ class ContainerExceptionsTest extends TestCase
      */
     public function testContainerConstructExceptionWithNotFoundException(): void
     {
-        $containerException = new NotFoundException($id = 'another-key', 13);
+        $id = 'Tests\ContainerExceptionsTest\TestObjects\TestClassWithExceptionOnConstruct';
+        $containerException = new NotFoundException($keyId = 'another-key', 13);
         $container = new Container([
-            TestClassWithExceptionOnConstruct::class . '::params' => [
+            "$id::params" => [
                 'exception' => $containerException
             ],
-            'key' => TestClassWithExceptionOnConstruct::class,
+            'key' => $id,
         ]);
 
         self::expectException(ContainerExceptionInterface::class);
-        self::expectExceptionMessage(sprintf('No entry was found for %s identifier.', $id));
+        self::expectExceptionMessage(sprintf('No entry was found for %s identifier.', $keyId));
 
         try {
             $container->get('key');

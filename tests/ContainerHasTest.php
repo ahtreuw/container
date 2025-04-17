@@ -2,12 +2,14 @@
 
 namespace Tests\Container;
 
+use ArrayAccess;
 use Container\Container;
+use Container\NotFoundException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Tests\Container\TestObjects\TestClassInterface;
+use Throwable;
 
 class ContainerHasTest extends TestCase
 {
@@ -18,7 +20,7 @@ class ContainerHasTest extends TestCase
         yield ['keyInterface'];
         yield [Container::class];
         yield [ContainerInterface::class];
-        yield [TestClassInterface::class];
+        yield [NotFoundException::class];
     }
 
     #[DataProvider('hasCases')]
@@ -27,9 +29,17 @@ class ContainerHasTest extends TestCase
         self::assertTrue((new Container(['key' => 'value']))->has($id));
     }
 
-    public function testHasNotValue(): void
+    public static function hasNotCases(): Generator
     {
-        self::assertFalse((new Container(['key' => 'value']))->has('value'));
+        yield ['value'];
+        yield [Throwable::class];
+        yield [ArrayAccess::class];
+    }
+
+    #[DataProvider('hasNotCases')]
+    public function testHasNotValue(string $id): void
+    {
+        self::assertFalse((new Container(['key' => 'value']))->has($id));
     }
 
 }

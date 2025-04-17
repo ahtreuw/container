@@ -6,11 +6,21 @@ use Container\Container;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Tests\Container\TestObjects\TestClassWithBuiltInNotOptionalNotAllowsNullParameter;
-use Tests\Container\TestObjects\TestClassWithNotImplementableParameter;
 
 class ContainerNotFoundExceptionsTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        eval('
+        namespace Tests\\ContainerNotFoundExceptionsTest\\TestObjects; 
+        interface SomeServiceInterface {}
+        class TestClassWithSomeServiceInterfaceParameter { 
+            public function __construct(SomeServiceInterface $service) {} 
+        }
+        class TestClassWithIntParam { 
+            public function __construct(int $value) {} 
+        }');
+    }
 
     /**
      * @throws NotFoundExceptionInterface
@@ -47,11 +57,11 @@ class ContainerNotFoundExceptionsTest extends TestCase
     public function testWithBuiltInNotOptionalNotAllowsNullParameter(): void
     {
         $container = new Container;
-        $className = TestClassWithBuiltInNotOptionalNotAllowsNullParameter::class;
+
+        $className = '\Tests\ContainerNotFoundExceptionsTest\TestObjects\TestClassWithIntParam';
 
         self::expectException(NotFoundExceptionInterface::class);
-        $id = str_replace("\\", "\\\\", $className);
-        self::expectExceptionMessageMatches("/^No entry was found for $id::\\\$value identifier\.$/");
+        self::expectExceptionMessage("No entry was found for $className::\$value identifier.");
 
         $container->get($className);
     }
@@ -63,11 +73,11 @@ class ContainerNotFoundExceptionsTest extends TestCase
     public function testWithNotImplementableParameter(): void
     {
         $container = new Container;
-        $className = TestClassWithNotImplementableParameter::class;
+
+        $className = '\Tests\ContainerNotFoundExceptionsTest\TestObjects\TestClassWithSomeServiceInterfaceParameter';
 
         self::expectException(NotFoundExceptionInterface::class);
-        $id = str_replace("\\", "\\\\", $className);
-        self::expectExceptionMessageMatches("/^No entry was found for $id::\\\$value identifier\.$/");
+        self::expectExceptionMessage("No entry was found for $className::\$service identifier.");
 
         $container->get($className);
     }
