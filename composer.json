@@ -12,7 +12,10 @@
   ],
   "require": {
     "php": ">=8.2",
-    "psr/container": "^2.0"
+    "psr/container": "^2.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-factory": "^1.1",
+    "ext-pdo": "*"
   },
   "autoload": {
     "psr-4": {
@@ -22,12 +25,13 @@
   "provide": {
     "psr/container-implementation": "2.0"
   },
-  "autoload-dev": {
-    "psr-4": {
-      "Tests\\": "tests/"
-    }
-  },
   "require-dev": {
-    "phpunit/phpunit": "^11.5"
-  }
+    "ahtreuw/container-test": "dev-main"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url":  "git@github.com:ahtreuw/container-test.git"
+    }
+  ]
 }

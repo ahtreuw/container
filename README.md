@@ -17,16 +17,16 @@ $ composer require vulpes/container
 ```php
 interface ExampleDataAccessObjectInterface {}
 
-class ExampleDataAccessObject implements ExampleDataAccessObjectInterface {
+class ExampleDataAccessObject implements UserDataAccessObjectInterface {
     public function __construct(PDO $master, PDO $replica) {}
 }
 
-class AnotherExampleDataAccessObject implements ExampleDataAccessObjectInterface {}
+class AnotherExampleDataAccessObject implements UserDataAccessObjectInterface {}
 
 interface ExampleModelInterface {}
 
-class ExampleModel implements ExampleModelInterface { 
-    public function __construct(ExampleDataAccessObjectInterface $dao) {}
+class ExampleModel implements UserModelInterface { 
+    public function __construct(UserDataAccessObjectInterface $dao) {}
 }
 
 interface StorageCollectorWillKnowInterface {}
@@ -37,7 +37,7 @@ class Request implements StorageCollectorWillKnowInterface, StorageCollectorWill
 }
 
 class ExampleController {
-    public function __construct(ExampleModelInterface $model, StorageCollectorWillKnowInterface $request) {
+    public function __construct(UserModelInterface $model, StorageCollectorWillKnowInterface $request) {
         // the (Request) $request object will be the same that under below
     }
 }

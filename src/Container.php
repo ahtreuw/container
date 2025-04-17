@@ -178,6 +178,11 @@ class Container implements ContainerInterface
             return $this->getStorageValue($key, null, $source, $this->storage[$key]);
         }
 
+        // Try to find a matching entry in the container storage based on the reflection type
+        if ($key = $this->getStorageKeyFromReflectionNamedType($reflectionType)) {
+            return $this->getStorageValue($key, null, $source, $this->storage[$key]);
+        }
+
         // Use the default value if it's available
         if ($parameter->isDefaultValueAvailable()) {
             return $parameter->getDefaultValue();
