@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace Tests;
+namespace Tests\Container;
 
 use Container\Container;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Tests\TestObjects\TestClassInterface;
+use Tests\Container\TestObjects\TestClassInterface;
 
 class ContainerHasTest extends TestCase
 {

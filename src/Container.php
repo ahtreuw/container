@@ -313,6 +313,11 @@ class Container implements ContainerInterface
             return $key;
         }
 
+        // Check if the type name, with parameter name exists directly in storage
+        if (isset($this->storage[$key = "{$reflectionType->getName()}::{$parameter->getName()}"])) {
+            return $key;
+        }
+
         // Check if the type name exists directly in storage
         if (isset($this->storage[$key = $reflectionType->getName()])) {
             return $key;

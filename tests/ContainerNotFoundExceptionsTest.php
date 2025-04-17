@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace Tests;
+namespace Tests\Container;
 
 use Container\Container;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Tests\TestObjects\TestClassWithBuiltInNotOptionalNotAllowsNullParameter;
-use Tests\TestObjects\TestClassWithNotImplementableParameter;
+use Tests\Container\TestObjects\TestClassWithBuiltInNotOptionalNotAllowsNullParameter;
+use Tests\Container\TestObjects\TestClassWithNotImplementableParameter;
 
 class ContainerNotFoundExceptionsTest extends TestCase
 {
@@ -50,7 +50,8 @@ class ContainerNotFoundExceptionsTest extends TestCase
         $className = TestClassWithBuiltInNotOptionalNotAllowsNullParameter::class;
 
         self::expectException(NotFoundExceptionInterface::class);
-        self::expectExceptionMessage(sprintf('No entry was found for %s identifier.', "$className::\$value"));
+        $id = str_replace("\\", "\\\\", $className);
+        self::expectExceptionMessageMatches("/^No entry was found for $id::\\\$value identifier\.$/");
 
         $container->get($className);
     }
@@ -65,7 +66,8 @@ class ContainerNotFoundExceptionsTest extends TestCase
         $className = TestClassWithNotImplementableParameter::class;
 
         self::expectException(NotFoundExceptionInterface::class);
-        self::expectExceptionMessage(sprintf('No entry was found for %s identifier.', "$className::\$value"));
+        $id = str_replace("\\", "\\\\", $className);
+        self::expectExceptionMessageMatches("/^No entry was found for $id::\\\$value identifier\.$/");
 
         $container->get($className);
     }

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Tests;
+namespace Tests\Container;
 
 use Container\Container;
 use Container\ContainerException;
@@ -8,9 +8,9 @@ use Container\NotFoundException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use RuntimeException;
-use Tests\TestObjects\TestAliasClassInterface;
-use Tests\TestObjects\TestClassWithExceptionOnConstruct;
-use Tests\TestObjects\TestClassWithRecursiveParameter;
+use Tests\Container\TestObjects\TestAliasClassInterface;
+use Tests\Container\TestObjects\TestClassWithExceptionOnConstruct;
+use Tests\Container\TestObjects\TestClassWithRecursiveParameter;
 
 class ContainerExceptionsTest extends TestCase
 {

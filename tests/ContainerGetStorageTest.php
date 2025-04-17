@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Tests;
+namespace Tests\Container;
 
 use ArrayAccess;
 use ArrayObject;
@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Tests\TestObjects\TestClassWithOptionalParameter;
+use Tests\Container\TestObjects\TestClassWithOptionalParameter;
 
 class ContainerGetStorageTest extends TestCase
 {
@@ -143,6 +143,28 @@ class ContainerGetStorageTest extends TestCase
         self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
 
         self::assertSame($container, $container->get(TestClassWithOptionalParameter::class . '::' . ContainerInterface::class));
+        self::assertSame($container, $object->container);
+        self::assertNull($object->arrayAccess);
+    }
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    public function testGetFromStorageParametersWithParameterAndObjectName(): void
+    {
+        $container = new Container;
+
+        $container->set(ContainerInterface::class . '::container', $container);
+
+        /**
+         * @var TestClassWithOptionalParameter $object
+         */
+        $object = $container->get(TestClassWithOptionalParameter::class);
+
+        self::assertInstanceOf(TestClassWithOptionalParameter::class, $object);
+
+        self::assertSame($container, $container->get(ContainerInterface::class . '::container'));
         self::assertSame($container, $object->container);
         self::assertNull($object->arrayAccess);
     }

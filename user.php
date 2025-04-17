@@ -9,7 +9,15 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 interface UserDataAccessObjectInterface
 {
+    /**
+     * @throws PDOException
+     */
     public function fetchUser(string $email): null|object;
+
+    /**
+     * @throws PDOException
+     */
+    public function updateUserStatus(int $id, string $status): void;
 }
 
 readonly class UserDataAccessObject implements UserDataAccessObjectInterface
@@ -20,38 +28,70 @@ readonly class UserDataAccessObject implements UserDataAccessObjectInterface
 
     public function fetchUser(string $email): null|object
     {
-        $statement = $this->replica->prepare("SELECT * FROM users WHERE email = :email");
+        $statement = $this->replica->prepare("SELECT * FROM `users` WHERE email = :email;");
         $statement->bindValue(':email', $email, PDO::PARAM_STR);
         $statement->execute();
         return $statement->fetchObject() ?: null;
+    }
+
+    public function updateUserStatus(int $id, string $status): void
+    {
+        $statement = $this->master->prepare("UPDATE `users` SET `status`= :status WHERE id = :id;");
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+        $statement->bindValue(':status', $status, PDO::PARAM_STR);
+        $statement->execute();
     }
 }
 
 interface UserModelInterface
 {
-    public function login(null|string $email, null|string $password): void;
+
+    /**
+     * @throws Exception
+     * @throws PDOException
+     */
+    public function fetchUser(null|string $email): object;
+
+    /**
+     * @throws Exception
+     * @throws PDOException
+     */
+    public function updateUserStatus(null|string $email, string $status): void;
 }
 
 class UserModel implements UserModelInterface
 {
-    public function __construct(UserDataAccessObjectInterface $dao)
+    public function __construct(private UserDataAccessObjectInterface $dao)
     {
     }
 
-    public function login(null|string $email, null|string $password): void
+    public function fetchUser(null|string $email): object
     {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception('Invalid email');
+        }
+        if (!($user = $this->dao->fetchUser($email))) {
+            throw new Exception('User not found');
+        }
+        return $user;
+    }
 
+    public function updateUserStatus(null|string $email, string $status): void
+    {
+        if (!($user = $this->dao->fetchUser($email))) {
+            throw new Exception('User not found');
+        }
+        $this->dao->updateUserStatus($user->id, $status);
     }
 }
 
-class ExampleController implements RequestHandlerInterface
+class FetchUserController implements RequestHandlerInterface
 {
     public function __construct(
         private UserModelInterface       $userModel,
         private ResponseFactoryInterface $responseFactory,
     )
     {
-        // the (Request) $request object will be the same that under below
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
@@ -59,16 +99,68 @@ class ExampleController implements RequestHandlerInterface
         $body = (array)$request->getParsedBody();
 
         try {
-            $this->userModel->login(
-                $body['email'] ?? null,
-                $body['password'] ?? null
-            );
-        }catch (Exception $exception) {
-            $response = $this->responseFactory->createResponse(400);
+            $user = $this->userModel->fetchUser($body['email'] ?? null);
 
+            $response = $this->responseFactory->createResponse();
+            $response->getBody()->write(json_encode($user));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (PDOException $exception) {
+
+            $response = $this->responseFactory->createResponse(503);
+            $response->getBody()->write(json_encode(['message' => $exception->getMessage()]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (Exception $exception) {
+
+            $response = $this->responseFactory->createResponse(400);
+            $response->getBody()->write(json_encode(['message' => $exception->getMessage()]));
+
+            return $response->withHeader('Content-Type', 'application/json');
         }
     }
 }
+
+class InactivateUserStatusController implements RequestHandlerInterface
+{
+    public function __construct(
+        private UserModelInterface       $userModel,
+        private ResponseFactoryInterface $responseFactory,
+    )
+    {
+    }
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = (array)$request->getParsedBody();
+
+        try {
+            $this->userModel->updateUserStatus($body['email'] ?? null, 'inactive');
+
+            $response = $this->responseFactory->createResponse();
+            $response->getBody()->write(json_encode([]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (PDOException $exception) {
+
+            $response = $this->responseFactory->createResponse(503);
+            $response->getBody()->write(json_encode(['message' => $exception->getMessage()]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (Exception $exception) {
+
+            $response = $this->responseFactory->createResponse(400);
+            $response->getBody()->write(json_encode(['message' => $exception->getMessage()]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+}
+
 $container = new Container\Container([
     PDO::class => 'PDO::master',
     'PDO::master' => function () {
@@ -78,4 +170,6 @@ $container = new Container\Container([
         return new PDO(getenv('PDO_RPL_DSN'), getenv('PDO_RPL_USR'), getenv('PDO_RPL_PWD'));
     },
 ]);
-var_dump(PDO::class);die;
+
+$fethUserController = $container->get(FetchUserController::class);
+$inactivateUserStatusController = $container->get(InactivateUserStatusController::class);

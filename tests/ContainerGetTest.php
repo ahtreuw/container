@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Tests;
+namespace Tests\Container;
 
 use Container\Container;
 use PHPUnit\Framework\TestCase;
@@ -8,8 +8,8 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use stdClass;
-use Tests\TestObjects\TestClassWithDefaultParameterValues;
-use Tests\TestObjects\TestClassWithOptionalParameter;
+use Tests\Container\TestObjects\TestClassWithDefaultParameterValues;
+use Tests\Container\TestObjects\TestClassWithOptionalParameter;
 
 class ContainerGetTest extends TestCase
 {
