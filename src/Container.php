@@ -174,12 +174,7 @@ class Container implements ContainerInterface
         }
 
         // Try to find a matching entry in the container storage based on the reflection type
-        if ($key = $this->getStorageKeyFromReflectionNamedType($reflectionType)) {
-            return $this->getStorageValue($key, null, $source, $this->storage[$key]);
-        }
-
-        // Try to find a matching entry in the container storage based on the reflection type
-        if ($key = $this->getStorageKeyFromReflectionNamedType($reflectionType)) {
+        if ($key = $this->getStorageKeyFromReflectionNamedType($parameter, $reflectionType, $id, $alias)) {
             return $this->getStorageValue($key, null, $source, $this->storage[$key]);
         }
 
@@ -294,16 +289,37 @@ class Container implements ContainerInterface
         throw new NotFoundException("$id::\${$parameter->getName()}", NotFoundException::DEFAULT_NOT_FOUND);
     }
 
-    protected function getStorageKeyFromReflectionNamedType(ReflectionNamedType $reflectionType): null|string
+    protected function getStorageKeyFromReflectionNamedType(
+        ReflectionParameter $parameter, ReflectionNamedType $reflectionType, string $id, string|null $alias
+    ): null|string
     {
+        // Check if the parameter name, with alias exists directly in storage
+        if ($alias && isset($this->storage[$key = "$alias::{$parameter->getName()}"])) {
+            return $key;
+        }
+
+        // Check if the parameter name, with id exists directly in storage
+        if (isset($this->storage[$key = "$id::{$parameter->getName()}"])) {
+            return $key;
+        }
+
+        // Check if the type name, with alias exists directly in storage
+        if ($alias && isset($this->storage[$key = "$alias::{$reflectionType->getName()}"])) {
+            return $key;
+        }
+
+        // Check if the type name, with id exists directly in storage
+        if (isset($this->storage[$key = "$id::{$reflectionType->getName()}"])) {
+            return $key;
+        }
+
         // Check if the type name exists directly in storage
-        if (isset($this->storage[$name = $reflectionType->getName()])) {
-            return $name;
+        if (isset($this->storage[$key = $reflectionType->getName()])) {
+            return $key;
         }
 
         // Check if the type name ends with 'Interface' and the corresponding class exists in storage
-        if (str_ends_with($name, 'Interface') &&
-            isset($this->storage[$sub = substr($name, 0, -9)])) {
+        if (str_ends_with($key, 'Interface') && isset($this->storage[$sub = substr($key, 0, -9)])) {
             return $sub;
         }
 

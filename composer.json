@@ -25,13 +25,12 @@
   "provide": {
     "psr/container-implementation": "2.0"
   },
-  "require-dev": {
-    "ahtreuw/container-test": "dev-main"
-  },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url":  "git@github.com:ahtreuw/container-test.git"
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
     }
-  ]
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  }
 }
